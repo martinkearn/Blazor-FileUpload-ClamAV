@@ -5,7 +5,10 @@
 
 <p>This sample combines <a href="https://blog.stevensanderson.com/2019/09/13/blazor-inputfile/">BlazorInputFile</a> with <a href="https://github.com/tekmaven/nClam">nClam</a> to do a file upload with virus check.</p>
 
+<input type="text" @bind-value="server" placeholder="ClamAV server." />
+<br />
 <InputFile OnChange="HandleFileSelected" />
+<br />
 
 @if (file != null)
 {
@@ -19,13 +22,16 @@
 @code {
     IFileListEntry file;
     string scanStatus;
+    string server;
 
     async Task HandleFileSelected(IFileListEntry[] files)
     {
         file = files.FirstOrDefault();
 
         // Scan with nClam
-        var serverName = Configuration["ClamAVServerName"];
+        var serverName = (string.IsNullOrEmpty(server)) ?
+            Configuration["ClamAVServerName"] :
+            server;
         var clam = new ClamClient(serverName, 3310);
         var scanResult = await clam.SendAndScanFileAsync(file.Data);
         switch (scanResult.Result)
