@@ -12,13 +12,34 @@
     <p>Size in bytes: @file.Size</p>
     <p>Last modified date: @file.LastModified.ToShortDateString()</p>
     <p>Content type (not always supplied by the browser): @file.Type</p>
+    <p>ClamAV scan status: @scanStatus</p>
 }
 
 @code {
     IFileListEntry file;
+    string scanStatus;
 
-    void HandleFileSelected(IFileListEntry[] files)
+    async Task HandleFileSelected(IFileListEntry[] files)
     {
         file = files.FirstOrDefault();
+
+        // Scan with nClam
+        var clam = new ClamClient("20.50.109.154", 3310);
+        var scanResult = await clam.SendAndScanFileAsync(file.Data);
+        switch (scanResult.Result)
+        {
+            case ClamScanResults.Clean:
+                scanStatus = "File is clean";
+                break;
+            case ClamScanResults.VirusDetected:
+                scanStatus = "File is infected";
+                break;
+            case ClamScanResults.Error:
+                scanStatus = "File scan produced an error";
+                break;
+            case ClamScanResults.Unknown:
+                scanStatus = "File scan produced an unknown status";
+                break;
+        }
     }
 }
