@@ -5,7 +5,7 @@
 
 <p>This sample combines <a href="https://blog.stevensanderson.com/2019/09/13/blazor-inputfile/">BlazorInputFile</a> with <a href="https://github.com/tekmaven/nClam">nClam</a> to do a file upload with virus check.</p>
 
-<input type="text" @bind-value="server" placeholder="ClamAV server." />
+<input type="text" @bind-value="server" style="width:100%" placeholder="ClamAV server, for example '20.50.109.154'" />
 <br />
 <InputFile OnChange="HandleFileSelected" />
 <br />
@@ -33,21 +33,29 @@
             Configuration["ClamAVServerName"] :
             server;
         var clam = new ClamClient(serverName, 3310);
-        var scanResult = await clam.SendAndScanFileAsync(file.Data);
-        switch (scanResult.Result)
+        try
         {
-            case ClamScanResults.Clean:
-                scanStatus = $"File is clean according to {serverName}";
-                break;
-            case ClamScanResults.VirusDetected:
-                scanStatus = $"File is infected according to {serverName}";
-                break;
-            case ClamScanResults.Error:
-                scanStatus = $"File scan produced an error from {serverName}";
-                break;
-            case ClamScanResults.Unknown:
-                scanStatus = $"File scan produced an unknown status from {serverName}";
-                break;
+            var scanResult = await clam.SendAndScanFileAsync(file.Data);
+            switch (scanResult.Result)
+            {
+                case ClamScanResults.Clean:
+                    scanStatus = $"File is clean according to {serverName}";
+                    break;
+                case ClamScanResults.VirusDetected:
+                    scanStatus = $"File is infected according to {serverName}";
+                    break;
+                case ClamScanResults.Error:
+                    scanStatus = $"File scan produced an error from {serverName}, {scanResult.RawResult}";
+                    break;
+                case ClamScanResults.Unknown:
+                    scanStatus = $"File scan produced an unknown status from {serverName}, {scanResult.RawResult}";
+                    break;
+            }
         }
+        catch (Exception e)
+        {
+            scanStatus = $"File scan produced an error from {serverName}, {e.Message}";
+        }
+
     }
 }
