@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 
 namespace FileUploadClam
@@ -27,6 +28,11 @@ namespace FileUploadClam
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
+
+            var configuration = new ConfigurationBuilder()
+             .AddJsonFile("appsettings.json")
+             .Build();
+            services.AddSingleton<IConfiguration>(configuration);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

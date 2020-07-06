@@ -1,4 +1,5 @@
 ﻿@page "/"
+@inject IConfiguration Configuration
 
 <h1>File Upload with ClamAV</h1>
 
@@ -24,21 +25,22 @@
         file = files.FirstOrDefault();
 
         // Scan with nClam
-        var clam = new ClamClient("20.50.109.154", 3310);
+        var serverName = Configuration["ClamAVServerName"];
+        var clam = new ClamClient(serverName, 3310);
         var scanResult = await clam.SendAndScanFileAsync(file.Data);
         switch (scanResult.Result)
         {
             case ClamScanResults.Clean:
-                scanStatus = "File is clean";
+                scanStatus = $"File is clean according to {serverName}";
                 break;
             case ClamScanResults.VirusDetected:
-                scanStatus = "File is infected";
+                scanStatus = $"File is infected according to {serverName}";
                 break;
             case ClamScanResults.Error:
-                scanStatus = "File scan produced an error";
+                scanStatus = $"File scan produced an error from {serverName}";
                 break;
             case ClamScanResults.Unknown:
-                scanStatus = "File scan produced an unknown status";
+                scanStatus = $"File scan produced an unknown status from {serverName}";
                 break;
         }
     }
