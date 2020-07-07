@@ -3,7 +3,7 @@
 
 <h1>File Upload with BlazorInputFile and ClamAV/nClam</h1>
 
-<p>This sample combines <a href="https://blog.stevensanderson.com/2019/09/13/blazor-inputfile/">BlazorInputFile</a> with <a href="https://github.com/tekmaven/nClam">nClam</a> to do a file upload with virus check.</p>
+<p>This sample combines <a href="https://blog.stevensanderson.com/2019/09/13/blazor-inputfile/">BlazorInputFile</a> with <a href="https://github.com/tekmaven/nClam">nClam</a> to do a file upload with virus check against <a href="https://www.clamav.net/">ClamAV</a> server instance hosted via a <a href="https://hub.docker.com/r/filefrog/clamav">filefrog/clamav</a> Docker container.</p>
 
 <InputFile OnChange="HandleFileSelected" />
 
@@ -19,7 +19,6 @@
 @code {
     IFileListEntry file;
     string scanStatus;
-    string server;
 
     private async Task HandleFileSelected(IFileListEntry[] files)
     {
