@@ -27,28 +27,21 @@
         // Scan with nClam
         var serverName = Configuration["ClamAVServerName"];
         var clam = new ClamClient(serverName, 3310);
-        try
+        var scanResult = await clam.SendAndScanFileAsync(file.Data);
+        switch (scanResult.Result)
         {
-            var scanResult = await clam.SendAndScanFileAsync(file.Data);
-            switch (scanResult.Result)
-            {
-                case ClamScanResults.Clean:
-                    scanStatus = $"File is clean according to {serverName}";
-                    break;
-                case ClamScanResults.VirusDetected:
-                    scanStatus = $"File is infected according to {serverName}";
-                    break;
-                case ClamScanResults.Error:
-                    scanStatus = $"File scan produced an error from {serverName}, {scanResult.RawResult}";
-                    break;
-                case ClamScanResults.Unknown:
-                    scanStatus = $"File scan produced an unknown status from {serverName}, {scanResult.RawResult}";
-                    break;
-            }
-        }
-        catch (Exception e)
-        {
-            scanStatus = $"File scan produced an error from {serverName}, {e.Message}";
+            case ClamScanResults.Clean:
+                scanStatus = $"File is clean according to {serverName}";
+                break;
+            case ClamScanResults.VirusDetected:
+                scanStatus = $"File is infected according to {serverName}";
+                break;
+            case ClamScanResults.Error:
+                scanStatus = $"File scan produced an error from {serverName}, {scanResult.RawResult}";
+                break;
+            case ClamScanResults.Unknown:
+                scanStatus = $"File scan produced an unknown status from {serverName}, {scanResult.RawResult}";
+                break;
         }
     }
 }
