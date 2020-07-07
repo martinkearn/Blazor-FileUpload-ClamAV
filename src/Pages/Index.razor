@@ -1,4 +1,5 @@
 ﻿@page "/"
+@inject IConfiguration Configuration
 
 <h1>File Upload with BlazorInputFile and ClamAV/nClam</h1>
 
@@ -12,6 +13,7 @@
     <p>Size in bytes: @file.Size</p>
     <p>Last modified date: @file.LastModified.ToShortDateString()</p>
     <p>Content type (not always supplied by the browser): @file.Type</p>
+    <p>ClamAV scan status: @scanStatus</p>
 }
 
 @code {
@@ -19,8 +21,35 @@
     string scanStatus;
     string server;
 
-    private void HandleFileSelected(IFileListEntry[] files)
+    private async Task HandleFileSelected(IFileListEntry[] files)
     {
         file = files.FirstOrDefault();
+
+        // Scan with nClam
+        var serverName = Configuration["ClamAVServerName"];
+        var clam = new ClamClient(serverName, 3310);
+        try
+        {
+            var scanResult = await clam.SendAndScanFileAsync(file.Data);
+            switch (scanResult.Result)
+            {
+                case ClamScanResults.Clean:
+                    scanStatus = $"File is clean according to {serverName}";
+                    break;
+                case ClamScanResults.VirusDetected:
+                    scanStatus = $"File is infected according to {serverName}";
+                    break;
+                case ClamScanResults.Error:
+                    scanStatus = $"File scan produced an error from {serverName}, {scanResult.RawResult}";
+                    break;
+                case ClamScanResults.Unknown:
+                    scanStatus = $"File scan produced an unknown status from {serverName}, {scanResult.RawResult}";
+                    break;
+            }
+        }
+        catch (Exception e)
+        {
+            scanStatus = $"File scan produced an error from {serverName}, {e.Message}";
+        }
     }
 }
