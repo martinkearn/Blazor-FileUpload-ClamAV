@@ -33,7 +33,7 @@
         // For simplicity I'm going to simply store it in memory as a byte[], but this is not a practical solution because several large files being stored concurrently could take up all your server memory.
         // A better, more scalable solution would be to store the file in a Azure Storage Blob Container and send it to ClamAV from there. I may update the sample later to show this.
 
-        // Save stream as byte[] in server memory. This byte[] can then be used to work with the file afte rthe ClamAV scan has taken place
+        // Read the file stream into byte[] in server memory. This byte[] can then be used to work with the file after the ClamAV scan has taken place
         using var memoryStream = new MemoryStream();
         await file.Data.CopyToAsync(memoryStream);
         var fileBytes = memoryStream.ToArray();
