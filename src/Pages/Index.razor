@@ -7,34 +7,48 @@
 
 <InputFile OnChange="HandleFileSelected" />
 
+<br />
+
 @if (file != null)
 {
     <p>Name: @file.Name</p>
-    <p>Size in bytes: @file.Size</p>
+    <p>Size bytes before scan: @file.Size</p>
     <p>Last modified date: @file.LastModified.ToShortDateString()</p>
     <p>Content type (not always supplied by the browser): @file.Type</p>
     <p>ClamAV scan status: @scanStatus</p>
+    <p>File bytes after scan: @bytesAfterScan</p>
 }
 
 @code {
     IFileListEntry file;
     string scanStatus;
+    int bytesAfterScan;
 
     private async Task HandleFileSelected(IFileListEntry[] files)
     {
         file = files.FirstOrDefault();
 
+        // file.Data is a non-seekable stream. This means it can only be read once and the ClamAV scan counts as a read.
+        // To mitigate this, you need to store the file somehwere on the first read from the InputFile component and send that version to ClamAV.
+        // For simplicity I'm going to simply store it in memory as a byte[], but this is not a practical solution because several large files being stored concurrently could take up all your server memory.
+        // A better, more scalable solution would be to store the file in a Azure Storage Blob Container and send it to ClamAV from there. I may update the sample later to show this.
+
+        // Save stream as byte[] in server memory. This byte[] can then be used to work with the file afte rthe ClamAV scan has taken place
+        using var memoryStream = new MemoryStream();
+        await file.Data.CopyToAsync(memoryStream);
+        var fileBytes = memoryStream.ToArray();
+
         // Scan with nClam
         var serverName = Configuration["ClamAVServerName"];
         var clam = new ClamClient(serverName, 3310);
-        var scanResult = await clam.SendAndScanFileAsync(file.Data);
+        var scanResult = await clam.SendAndScanFileAsync(fileBytes);
         switch (scanResult.Result)
         {
             case ClamScanResults.Clean:
-                scanStatus = $"File is clean according to {serverName}";
+                scanStatus = $"CLEAN according to {serverName}";
                 break;
             case ClamScanResults.VirusDetected:
-                scanStatus = $"File is infected according to {serverName}";
+                scanStatus = $"INFECTED according to {serverName}";
                 break;
             case ClamScanResults.Error:
                 scanStatus = $"File scan produced an error from {serverName}, {scanResult.RawResult}";
@@ -43,5 +57,8 @@
                 scanStatus = $"File scan produced an unknown status from {serverName}, {scanResult.RawResult}";
                 break;
         }
+
+        // Do something else with the file
+        bytesAfterScan = fileBytes.Length;
     }
 }
