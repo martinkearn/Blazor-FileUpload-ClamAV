@@ -42,21 +42,14 @@
         var serverName = Configuration["ClamAVServerName"];
         var clam = new ClamClient(serverName, 3310);
         var scanResult = await clam.SendAndScanFileAsync(fileBytes);
-        switch (scanResult.Result)
+        scanStatus = scanResult.Result switch
         {
-            case ClamScanResults.Clean:
-                scanStatus = $"CLEAN according to {serverName}";
-                break;
-            case ClamScanResults.VirusDetected:
-                scanStatus = $"INFECTED according to {serverName}";
-                break;
-            case ClamScanResults.Error:
-                scanStatus = $"File scan produced an error from {serverName}, {scanResult.RawResult}";
-                break;
-            case ClamScanResults.Unknown:
-                scanStatus = $"File scan produced an unknown status from {serverName}, {scanResult.RawResult}";
-                break;
-        }
+            ClamScanResults.Unknown => $"File scan produced an unknown status from {serverName}, {scanResult.RawResult}",
+            ClamScanResults.Clean => $"CLEAN according to {serverName}",
+            ClamScanResults.VirusDetected => $"INFECTED according to {serverName}",
+            ClamScanResults.Error => $"File scan produced an error from {serverName}, {scanResult.RawResult}",
+        };
+
 
         // Do something else with the file
         bytesAfterScan = fileBytes.Length;
